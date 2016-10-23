@@ -56,9 +56,11 @@ public class FSA {
         
         char[] chars=input.toCharArray();
         for(char nextChar:chars) {
-            String args=lastState+","+nextChar;
-            if(transitions.containsKey(args)) lastState=transitions.get(args);
-            else return "WARNING! ("+args+") not defined! ";
+            if(symbols.contains(Character.toString(nextChar))) {
+                String args=lastState+","+nextChar;
+                if(transitions.containsKey(args)) lastState=transitions.get(args);
+                else return "WARNING! ("+args+") not defined! ";
+            } else consolePrint("WARNING!"+nextChar+" is not a valid symbol! ignoring...");
         }
         if(finalStates.contains(lastState)) isFinal=" [FINAL]";
         return lastState.concat(isFinal);

@@ -110,7 +110,7 @@ public class FSATest extends Application{
             //DEFINITION
             TEXT_DEFINITION=new Text("FSA Definition");
             TEXTFIELD_DEFINITION=new TextField();
-            TEXTFIELD_DEFINITION.setText("<{a,b},{q0,q1,q2},d,q0,{q1,q2}>");
+            TEXTFIELD_DEFINITION.setText("<{a,b},{q0,q1},d,q0,{q1}>");
             
             CENTER_GRID.add(TEXT_DEFINITION, 0, 2);
             CENTER_GRID.add(TEXTFIELD_DEFINITION,1,2);
