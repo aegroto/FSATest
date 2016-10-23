@@ -59,7 +59,7 @@ public class FSATest extends Application{
             /*****************/
             TOP_FLOW=new FlowPane();
             TOP_FLOW.setPadding(new Insets(10,0,10,10));
-            TOP_FLOW.setHgap(40);
+            TOP_FLOW.setHgap(30);
             TOP_FLOW.setVgap(10);
             
             BUTTON_IMPORT=new Button("Import FSA");
@@ -138,11 +138,11 @@ public class FSATest extends Application{
             MAIN_BORDER.setCenter(CENTER_GRID);
             MAIN_BORDER.setBottom(TEXTAREA_CONSOLE);
             
-            SCENE=new Scene(MAIN_BORDER,400,450);
+            SCENE=new Scene(MAIN_BORDER,425,450);
             stage.setScene(SCENE);
             stage.show();
             
-            consolePrint("Welcome!\nInsert input to begin.");
+            consolePrint("Welcome! Finite State Automata Test - aegroto - 2016\nInsert input,define the FSA and the press 'Execute' to begin");
     }
     
     protected FSA generateFSA(String definition,String transitions) throws FSAException {
