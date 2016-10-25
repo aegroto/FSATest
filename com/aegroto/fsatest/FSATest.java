@@ -2,23 +2,28 @@ package com.aegroto.fsatest;
 
 import com.aegroto.fsatest.exceptions.FSATransitionFormatException;
 import com.aegroto.fsatest.exceptions.FSAException;
-import java.util.Arrays;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
 public class FSATest extends Application{
@@ -33,10 +38,12 @@ public class FSATest extends Application{
     
     private BorderPane MAIN_BORDER;
     private GridPane CENTER_GRID;
-    private FlowPane TOP_FLOW;
     private Scene SCENE;
     
-    private Button BUTTON_IMPORT,BUTTON_EXPORT,BUTTON_UPDATE,BUTTON_EXECUTE;
+    private MenuBar TOP_MENU;
+    private Menu MENU_IMPORT,MENU_EXPORT;
+    
+    private Button BUTTON_UPDATE,BUTTON_EXECUTE;
     
     private TextField TEXTFIELD_INPUT,TEXTFIELD_DEFINITION;
     private TextArea TEXTAREA_TRANSITIONS;
@@ -57,46 +64,53 @@ public class FSATest extends Application{
             /*****************/
             /***TOP BUTTONS***/
             /*****************/
-            TOP_FLOW=new FlowPane();
-            TOP_FLOW.setPadding(new Insets(10,0,10,10));
-            TOP_FLOW.setHgap(30);
-            TOP_FLOW.setVgap(10);
+            FileChooser fileChooser=new FileChooser();
+            fileChooser.getExtensionFilters().addAll(
+                    new ExtensionFilter("Text Files","*.txt"),
+                    new ExtensionFilter("All files","*.*"));
+                
+            TOP_MENU=new MenuBar();
             
-            BUTTON_IMPORT=new Button("Import FSA");
-            BUTTON_IMPORT.setOnAction((ActionEvent e) -> {
-                consolePrint("Import!");
-            });
-            
-            BUTTON_EXPORT=new Button("Export FSA");
-            BUTTON_EXPORT.setOnAction((ActionEvent e) -> {
-                consolePrint("Export!");
-            });
-            
-            BUTTON_UPDATE=new Button("Update FSA");
-            BUTTON_UPDATE.setOnAction((ActionEvent e) -> {
+            MENU_IMPORT=new Menu("Import");
+            MenuItem mi_importFSA=new MenuItem("Import FSA from file");
+            mi_importFSA.setOnAction((ActionEvent e) -> {
+                fileChooser.setTitle("Import FSA");
+                File file=fileChooser.showOpenDialog(stage);
                 try {
-                    currentFsa=generateFSA(
-                        TEXTFIELD_DEFINITION.getText(),
-                        TEXTAREA_TRANSITIONS.getText());
-                } catch(FSAException fsae) { consolePrint(fsae.getMessage()); }
-            });
-                        
-            BUTTON_EXECUTE=new Button("Execute");
-            BUTTON_EXECUTE.setOnAction((ActionEvent e) -> {
-                if(currentFsa!=null) {
-                    String input=TEXTFIELD_INPUT.getText();
-                    consolePrint("Elaborating '"+input+"'");
-                    consolePrint("FSA returned:"+currentFsa.elaborateInput(input));
-                } else consolePrint("ERROR:FSA is null,update it first");
+                    if(file!=null) {
+                        String[] fileParts=new String(
+                            Files.readAllBytes(Paths.get(file.getAbsolutePath())), Charset.defaultCharset()
+                        ).split("\n###\n");
+                        TEXTFIELD_DEFINITION.setText(fileParts[0]);
+                        TEXTAREA_TRANSITIONS.setText(fileParts[1]);
+                        consolePrint("Successfully imported FSA from"+file.getPath());
+                        try { updateFSAFromForm(); } catch(FSAException fsae) { consolePrint(fsae.getMessage()); }
+                    }
+                } catch(IOException ex) { consolePrint("Unable to import FSA from"+file.getPath()); }
             });
             
-            TOP_FLOW.getChildren().addAll(BUTTON_IMPORT,BUTTON_EXPORT,BUTTON_UPDATE);
+            MENU_IMPORT.getItems().addAll(mi_importFSA);   
+            
+            MENU_EXPORT=new Menu("Export");
+            MenuItem mi_exportFSA=new MenuItem("Export FSA to file");
+            mi_exportFSA.setOnAction((ActionEvent e) -> {
+                fileChooser.setTitle("Import FSA");
+                File file=fileChooser.showSaveDialog(stage);
+                
+                try (FileWriter fileWriter = new FileWriter(file)) {
+                    fileWriter.write(TEXTFIELD_DEFINITION.getText().concat("\n###\n").concat(TEXTAREA_TRANSITIONS.getText())); 
+                } catch(Exception ex) { consolePrint("Unable to export FSA from"+file.getPath()); }
+            });
+            
+            MENU_EXPORT.getItems().addAll(mi_exportFSA);   
+            
+            TOP_MENU.getMenus().addAll(MENU_IMPORT,MENU_EXPORT);
 
             /*******************/
             /***CENTER INPUTS***/
             /*******************/
             CENTER_GRID=new GridPane();
-            CENTER_GRID.setPadding(new Insets(-5,10,10,10));
+            CENTER_GRID.setPadding(new Insets(10,10,10,10));
             CENTER_GRID.setHgap(10);
             CENTER_GRID.setVgap(10);
             
@@ -124,8 +138,27 @@ public class FSATest extends Application{
             CENTER_GRID.add(TEXT_TRANSITIONS,0,3);
             CENTER_GRID.add(TEXTAREA_TRANSITIONS,1,3);
             
+            
+            BUTTON_UPDATE=new Button("Update FSA");
+            BUTTON_UPDATE.setOnAction((ActionEvent e) -> {
+                try {
+                    updateFSAFromForm();
+                } catch(FSAException fsae) { consolePrint(fsae.getMessage()); }
+            });
+                        
+            BUTTON_EXECUTE=new Button("Execute");
+            BUTTON_EXECUTE.setOnAction((ActionEvent e) -> {
+                if(currentFsa!=null) {
+                    String input=TEXTFIELD_INPUT.getText();
+                    consolePrint("Elaborating '"+input+"'");
+                    consolePrint("FSA returned:"+currentFsa.elaborateInput(input));
+                } else consolePrint("ERROR:FSA is null,update it first");
+            });
+            
+            CENTER_GRID.add(BUTTON_UPDATE,1,4);
             CENTER_GRID.add(BUTTON_EXECUTE,1,4);
-            GridPane.setHalignment(BUTTON_EXECUTE, HPos.CENTER);
+            GridPane.setHalignment(BUTTON_EXECUTE, HPos.RIGHT);
+            GridPane.setHalignment(BUTTON_UPDATE,HPos.LEFT);
             /*************/
             /***CONSOLE***/
             /*************/            
@@ -134,7 +167,7 @@ public class FSATest extends Application{
             /***************/
             /***START GUI***/ 
             /***************/
-            MAIN_BORDER.setTop(TOP_FLOW);
+            MAIN_BORDER.setTop(TOP_MENU);
             MAIN_BORDER.setCenter(CENTER_GRID);
             MAIN_BORDER.setBottom(TEXTAREA_CONSOLE);
             
@@ -181,5 +214,11 @@ public class FSATest extends Application{
         //consolePrint(fsa.toString());
         consolePrint("Updated FSA");
         return fsa;
+    }
+    
+    private void updateFSAFromForm() throws FSAException{
+        currentFsa=generateFSA(
+            TEXTFIELD_DEFINITION.getText(),
+            TEXTAREA_TRANSITIONS.getText());
     }
 }

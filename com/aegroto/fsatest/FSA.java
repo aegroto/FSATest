@@ -16,10 +16,6 @@ import java.util.HashMap;
  * @author lorenzo
  */
 public class FSA {
-    /*class LambdaDefine {
-        protected String state,symbol;
-    }*/
-    
     @Override
     public String toString() {
         return "FSA data:\nSymbols:"+symbols+
@@ -73,16 +69,21 @@ public class FSA {
             if(!transition.isEmpty()) {
                 if(transition.contains("(")&&transition.contains(")")&&transition.contains("=")) {
                     String funcName=transition.split("\\(")[0],
-                           args=transition.split("\\(")[1].split("\\)")[0],
+                           argsBlock=transition.split("\\(")[1].split("\\)")[0],
                            state=transition.split("=")[1];
+                    String[] args=argsBlock.split(",");
                     if(!funcName.equals(transitionFunctionName))
                         throw new FSATransitionFormatException("Invalid transition:"+transition+" - Function name doesn't match.");
-                    else if(!args.contains(","))
-                        throw new FSATransitionFormatException("Invalid transition:"+transition+" - arguments must be split by ','");
+                    else if(!argsBlock.contains(","))
+                        throw new FSATransitionFormatException("Invalid transition:"+transition+" - arguments must be split by ','");                   
+                    else if(!states.contains(args[0]))
+                        throw new FSATransitionFormatException("Invalid transition:"+transition+" - state argument is not a valid state");   
+                    else if(!symbols.contains(args[1]))
+                        throw new FSATransitionFormatException("Invalid transition:"+transition+" - symbol argument is not a valid symbol (extended transitions still not supported)");   
                     else if(!states.contains(state))
                         throw new FSATransitionFormatException("Invalid transition:"+transition+" - FSA doesn't have any state '"+state+"'");
                 
-                    transitions.put(args, state);
+                    transitions.put(argsBlock, state);
                 } else throw new FSATransitionFormatException("Invalid transition:"+transition+" - incorrect syntax");
                 //consolePrint("Got valid rule:"+transition);
             }
