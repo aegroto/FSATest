@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.aegroto.fsatest;
 
 import static com.aegroto.fsatest.FSATest.consolePrint;
@@ -10,6 +5,7 @@ import com.aegroto.fsatest.exceptions.FSAException;
 import com.aegroto.fsatest.exceptions.FSATransitionFormatException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import lombok.Getter;
 
 /**
  *
@@ -26,19 +22,25 @@ public class FSA {
                 "\nFinal states:"+finalStates;
     }    
     
-    protected ArrayList<String> 
+    @Getter protected ArrayList<String> 
             symbols=new ArrayList(),            
             states=new ArrayList(),
             finalStates=new ArrayList();
-    protected String initialState,transitionFunctionName;
+    @Getter protected String initialState,transitionFunctionName;
     
-    protected HashMap<String,String> transitions=new HashMap();
+    @Getter protected HashMap<String,String> transitions=new HashMap();
+    
+    @Getter protected int maxStringSize=0;
     
     public FSA(String strSymbols,String strStates,String strTransitionFunctionName,String strInitialState,String strFinalStates) {
-        for(String symbol:strSymbols.split(",")) 
+        for(String symbol:strSymbols.split(",")) {
+            if(symbol.length()>maxStringSize) maxStringSize=symbol.length();
             symbols.add(symbol);
-        for(String state:strStates.split(","))
+        }
+        for(String state:strStates.split(",")) {
+            if(state.length()>maxStringSize) maxStringSize=state.length();
             states.add(state);
+        }
         for(String finalState:strFinalStates.split(",")) 
             finalStates.add(finalState);
         
